@@ -33,3 +33,26 @@ export async function shortUrl(req, res) {
     return res.status(500).send(error);
   }
 }
+
+export async function getUrlById(req, res) {
+  const { id } = req.params;
+  try {
+    const { rows: url } = await connection.query(
+      `
+      SELECT * FROM urls WHERE id = $1
+    `,
+      [id]
+    );
+    if (url.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.send({
+      id: url[0].id,
+      shortUrl: url[0].shortUrl,
+      url: url[0].url,
+    });
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+  res.send("BOA");
+}
