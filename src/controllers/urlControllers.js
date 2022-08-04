@@ -82,3 +82,37 @@ export async function openShortUrl(req, res) {
     return res.status(500).send(error);
   }
 }
+
+export async function deleteUrl(req, res) {
+  const { id } = req.params;
+  const { session } = res.locals;
+  try {
+    const { rows: url } = await connection.query(
+      `
+      SELECT * FROM urls WHERE id = $1
+    `,
+      [id]
+    );
+    if (url.length !== 0) {
+      const { rows: urlUser } = await connection.query(
+        `
+        SELECT * FROM urls WHERE id = $1 AND "userId" = $2
+      `,
+        [id, session[0].userId]
+      );
+      if (urlUser.length === 0) {
+        return res.sendStatus(401);
+      }
+      connection.query(
+        `
+        DELETE FROM urls WHERE id = $1
+      `,
+        [id]
+      );
+      return res.sendStatus(204);
+    }
+    res.sendStatus(404);
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+}
